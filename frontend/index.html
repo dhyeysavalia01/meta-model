@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Model recommender</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="layout">
+  <aside class="rail">
+    <div class="brand">
+      <h1>Meta Model</h1>
+      <p>Ranks algorithms by what worked on similar datasets, then checks your pick with cross-validation.</p>
+    </div>
+    <ol class="steps" id="steps">
+      <li data-step="1"><button type="button"><i class="dot">1</i><span><b>Task</b><small></small></span></button></li>
+      <li data-step="2"><button type="button"><i class="dot">2</i><span><b>Dataset</b><small></small></span></button></li>
+      <li data-step="3"><button type="button"><i class="dot">3</i><span><b>Missing values</b><small></small></span></button></li>
+      <li data-step="4"><button type="button"><i class="dot">4</i><span><b>Target</b><small></small></span></button></li>
+      <li data-step="5"><button type="button"><i class="dot">5</i><span><b>Shortlist</b><small></small></span></button></li>
+      <li data-step="6"><button type="button"><i class="dot">6</i><span><b>Validation</b><small></small></span></button></li>
+    </ol>
+  </aside>
+
+  <main>
+    <section class="step" id="s1" data-step="1">
+      <h2>What are you predicting?</h2>
+      <p class="hint">Choose the task that matches your target column.</p>
+      <div class="choices" role="radiogroup" aria-label="Task">
+        <button type="button" class="choice" data-task="regression" role="radio" aria-checked="false">
+          <svg viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M8 8v40h40"/><path d="M14 40 44 16" stroke-dasharray="4 5"/>
+            <circle cx="18" cy="38" r="2.5" fill="currentColor" stroke="none"/><circle cx="25" cy="31" r="2.5" fill="currentColor" stroke="none"/>
+            <circle cx="33" cy="33" r="2.5" fill="currentColor" stroke="none"/><circle cx="40" cy="20" r="2.5" fill="currentColor" stroke="none"/>
+          </svg>
+          <b>Regression</b><span>Predict a number, like price or demand.</span>
+        </button>
+        <button type="button" class="choice" data-task="classification" role="radio" aria-checked="false">
+          <svg viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M8 8v40h40"/><path d="M14 12 46 44" stroke-dasharray="4 5"/>
+            <circle cx="16" cy="40" r="2.5" fill="currentColor" stroke="none"/><circle cx="22" cy="44" r="2.5" fill="currentColor" stroke="none"/><circle cx="20" cy="34" r="2.5" fill="currentColor" stroke="none"/>
+            <circle cx="38" cy="20" r="2.5" fill="#E0476B" stroke="none"/><circle cx="42" cy="26" r="2.5" fill="#E0476B" stroke="none"/><circle cx="34" cy="14" r="2.5" fill="#E0476B" stroke="none"/>
+          </svg>
+          <b>Classification</b><span>Predict a category, like churn or species.</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="step hidden" id="s2" data-step="2">
+      <h2>Upload your dataset</h2>
+      <p class="hint">CSV or Excel, with column names in the first row.</p>
+      <label class="drop" id="drop" for="file">
+        <input type="file" id="file" class="sr" accept=".csv,.xlsx,.xls">
+        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 22V6m0 0-6 6m6-6 6 6M6 24v2h20v-2"/></svg>
+        <b id="dropTitle">Drop a file here or browse</b>
+        <span id="dropSub">CSV, XLSX or XLS</span>
+      </label>
+      <div class="actions"><button type="button" class="btn primary" id="btnUpload" disabled>Lets Go</button></div>
+      <div id="e2"></div>
+      <div id="info"></div>
+    </section>
+
+    <section class="step hidden" id="s3" data-step="3">
+      <h2>Fill missing values</h2>
+      <p class="hint">Numerical and categorical columns are filled separately.</p>
+      <fieldset>
+        <legend>Numerical columns</legend>
+        <div class="seg">
+          <label><input type="radio" name="num" value="mean"><span>Mean</span></label>
+          <label><input type="radio" name="num" value="median" checked><span>Median</span></label>
+          <label><input type="radio" name="num" value="most_frequent"><span>Most frequent</span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Categorical columns</legend>
+        <div class="row">
+          <div class="seg">
+            <label><input type="radio" name="cat" value="most_frequent" checked><span>Most frequent</span></label>
+            <label><input type="radio" name="cat" value="constant"><span>Constant value</span></label>
+          </div>
+          <input class="text" id="constant" value="Unknown" aria-label="Constant value" hidden>
+        </div>
+      </fieldset>
+      <div class="actions"><button type="button" class="btn primary" id="btnPre">Fill missing values</button></div>
+      <div id="e3"></div>
+      <div id="preInfo"></div>
+    </section>
+
+    <section class="step hidden" id="s4" data-step="4">
+      <h2>Choose the target</h2>
+      <p class="hint">Every other column becomes an input feature.</p>
+      <div class="row">
+        <select id="target" aria-label="Target column"></select>
+        <button type="button" class="btn primary" id="btnRec">Recommend models</button>
+      </div>
+      <div id="e4"></div>
+    </section>
+
+    <section class="step hidden" id="s5" data-step="5">
+      <h2>Your shortlist</h2>
+      <p class="hint">The meta-model ranks all seven candidates. Validate the top three and keep the best.</p>
+      <div id="e5"></div>
+      <div id="rec"></div>
+    </section>
+
+    <section class="step hidden" id="s6" data-step="6">
+      <h2>Cross-validated results</h2>
+      <p class="hint">Every score comes from held-out folds, so it reflects data the model did not train on.</p>
+      <div id="results"></div>
+    </section>
+  </main>
+</div>
+<div id="status" aria-live="polite"></div>
+<script src="app.js"></script>
+</body>
+</html>
