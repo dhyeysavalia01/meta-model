@@ -1,0 +1,23 @@
+name: Keep Render Service Alive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Render Application
+        run: |
+          echo "Pinging Meta-Model..."
+
+          curl -fsS \
+            --max-time 30 \
+            https://meta-model.onrender.com/ \
+            -o /dev/null
+
+          echo "Meta-Model ping successful!"
