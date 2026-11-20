@@ -2,7 +2,8 @@ name: Keep Render Service Alive
 
 on:
   schedule:
-    - cron: "0 9,21 * * *"
+    # 9:00 AM and 9:00 PM India Standard Time (UTC+5:30)
+    - cron: "30 3,15 * * *"
 
   workflow_dispatch:
 
@@ -15,8 +16,12 @@ jobs:
         run: |
           echo "Pinging Meta-Model..."
 
-          curl -fsS \
-            --max-time 30 \
+          curl -fsSL \
+            --connect-timeout 30 \
+            --max-time 180 \
+            --retry 3 \
+            --retry-delay 20 \
+            --retry-max-time 420 \
             https://meta-model.onrender.com/ \
             -o /dev/null
 
